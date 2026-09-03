@@ -33,7 +33,7 @@ python3 license_old.py
 
 - **Python 3** (testé avec 3.13)
 - **`fds_server.py`** : uniquement des modules de la bibliothèque standard (`socket`, `ssl`, `threading`, `struct`, `zlib`, `datetime`) — pas de `pip install` nécessaire pour le script lui-même.
-  - Nécessite en revanche un certificat TLS et sa clé privée (`cert.cer` / `key.key`). Le script ne les génère pas : `context.load_cert_chain(certfile='cert.cer', keyfile='key.key')` se contente de les charger, il faut donc que ces deux fichiers existent déjà dans le même dossier. Ils sont présents dans le [repo d'origine](https://github.com/rrrrrrri/fgt-gadgets) (commit `4a77e1f`) mais n'ont volontairement pas été repris dans **ce** repo. Pour en générer un toi-même (auto-signé) :
+  - Nécessite en revanche un certificat TLS et sa clé privée (`cert.cer` / `key.key`, inclus dans ce repo). Le script ne les génère pas : `context.load_cert_chain(certfile='cert.cer', keyfile='key.key')` se contente de les charger. Ce sont les mêmes fichiers que ceux du [repo d'origine](https://github.com/rrrrrrri/fgt-gadgets) (commit `4a77e1f`). Pour en régénérer d'autres (auto-signés) si besoin :
     ```
     openssl req -x509 -newkey rsa:2048 -keyout key.key -out cert.cer -days 3650 -nodes -subj "/CN=fds-server"
     ```
