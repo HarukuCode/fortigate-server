@@ -16,48 +16,60 @@ Serveur FDS minimal (TLS, port 8890) qui répond aux requêtes de check-in du Fo
 
 > Version patchée : le handshake TLS est protégé par un `try/except` et le contexte SSL accepte des versions/ciphers plus anciens (`TLSv1` min, `SECLEVEL=0`), pour rester compatible avec le client TLS de FortiOS et éviter qu'une connexion malformée ne tue tout le serveur.
 
-Nécessite un certificat/clé TLS (`cert.cer` / `key.key`, non inclus ici) à placer dans le même dossier.
-
 Lancement :
 ```
 python3 fds_server.py
 ```
 
 ### `license_old.py`
-Génère une licence FortiGate VM (`License.lic`) hors ligne, sans dépendre du serveur FDS. Nécessite `pycryptodome` :
+Génère une licence FortiGate VM (`License.lic`) hors ligne, sans dépendre du serveur FDS.
+
+Lancement :
 ```
-pip3 install pycryptodome
 python3 license_old.py
 ```
 
-## How to use
+## Dépendances
 
-Take FortiGate VM64 7.4.1 (VMware) as an example.
+- **Python 3** (testé avec 3.13)
+- **`fds_server.py`** : uniquement des modules de la bibliothèque standard (`socket`, `ssl`, `threading`, `struct`, `zlib`, `datetime`) — pas de `pip install` nécessaire pour le script lui-même.
+  - Nécessite en revanche un certificat TLS et sa clé privée (`cert.cer` / `key.key`, **non générés par le script et non inclus dans ce repo** — le script fait uniquement `context.load_cert_chain(certfile='cert.cer', keyfile='key.key')`, il faut donc que ces deux fichiers existent déjà dans le même dossier). Pour en générer un rapidement (auto-signé) :
+    ```
+    openssl req -x509 -newkey rsa:2048 -keyout key.key -out cert.cer -days 3650 -nodes -subj "/CN=fds-server"
+    ```
+- **`license_old.py`** : nécessite `pycryptodome`
+  ```
+  pip3 install pycryptodome
+  ```
 
-First, you need to deploy the VM and complete the configuration of the network interface in the CLI. Then you need to start the FDS server on a system that is in the same network as the FortiGate (make sure that FortiGate can access port 8890 of the FDS server).
+## Comment l'utiliser
 
-Execute the following commands on FortiGate:
+Exemple avec un FortiGate VM64 7.4.1 (VMware).
+
+D'abord, déployer la VM et terminer la configuration de l'interface réseau en CLI. Ensuite, démarrer le serveur FDS sur une machine du même réseau que le FortiGate (s'assurer que le FortiGate peut accéder au port 8890 du serveur FDS).
+
+Exécuter les commandes suivantes sur le FortiGate :
 
 ```
 config system central-management
     set mode normal
     set type fortimanager
-    set fmg <FDS server's ip address>
+    set fmg <adresse IP du serveur FDS>
     config server-list
     edit 1
         set server-type update rating
-        set server-address <FDS server's ip address>
+        set server-address <adresse IP du serveur FDS>
     end
 
-    set fmg-source-ip <FortiGate's ip address>
+    set fmg-source-ip <adresse IP du FortiGate>
     set include-default-servers disable
     set vdom root
 end
 ```
 
-Run the `license_old.py` script to generate a License file, log in to the web service of FortiGate and import this License file.
+Exécuter le script `license_old.py` pour générer un fichier de licence, se connecter à l'interface web du FortiGate et importer ce fichier de licence.
 
-The system will restart automatically. After the system starts up, you should be able to see some output on the FDS server, for example:
+Le système redémarre automatiquement. Une fois redémarré, le serveur FDS devrait afficher une sortie de ce type :
 
 ```
 ========================
@@ -81,7 +93,7 @@ The system will restart automatically. After the system starts up, you should be
 [*] Sending response
 ```
 
-Log in to the web service. If everything went well, you will enter the configuration wizard. DO NOT register with FortiCare and DISABLE automatic patch upgrades.
+Se connecter à l'interface web. Si tout s'est bien passé, l'assistant de configuration initial s'affiche. NE PAS s'enregistrer auprès de FortiCare et DÉSACTIVER les mises à jour de correctifs automatiques.
 
 ## Origine
 
